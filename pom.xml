@@ -37,6 +37,10 @@
         <directory>src/main/resources</directory>
         <targetPath>META-INF/resources</targetPath>
       </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <targetPath>/</targetPath>
+      </resource>
     </resources>
     <outputDirectory>classes/</outputDirectory>
     <plugins>
