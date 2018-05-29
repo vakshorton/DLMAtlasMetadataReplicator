@@ -134,20 +134,20 @@ Map<String, String> env = System.getenv();
 			LOG.error("DPS_HOST is not set. Please configure environment variables...");
 			System.exit(1);
 		}
-		
+		/*
 		if(env.get("WAREHOUSE_DB_NAME") != null){
 			warehouseDBName=(String)env.get("WAREHOUSE_DB_NAME");
 		}else {
-			LOG.error("WAREHOUSE_DB_NAM is not set. Please configure environment variables...");
+			LOG.error("WAREHOUSE_DB_NAME is not set. Please configure environment variables...");
 			System.exit(1);
 		}
 		
 		if(env.get("WAREHOUSE_LOCATION") != null){
 			warehouseLocation=(String)env.get("WAREHOUSE_LOCATION");
 		}else {
-			LOG.error("WAREHOUSE_LOCATIO is not set. Please configure environment variables...");
+			LOG.error("WAREHOUSE_LOCATION is not set. Please configure environment variables...");
 			System.exit(1);
-		}
+		} */
 		
 		BasicConfigurator.configure();
 		LOG.setLevel(Level.DEBUG);

@@ -25,4 +25,42 @@
     		<version>1.2.1</version>
 	</dependency>
   </dependencies>
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <sourceDirectory>src/</sourceDirectory>
+    <resources>
+	  <resource>
+        <directory>src/main/webapp</directory>
+        <targetPath>META-INF/resources</targetPath>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <targetPath>META-INF/resources</targetPath>
+      </resource>
+    </resources>
+    <outputDirectory>classes/</outputDirectory>
+    <plugins>
+		<plugin>
+    		<artifactId>maven-assembly-plugin</artifactId>
+    		<configuration>
+				<descriptorRefs>  
+        			<descriptorRef>jar-with-dependencies</descriptorRef>
+      			</descriptorRefs>
+      			<archive>
+        			<manifest>
+          				<mainClass>org.hortonworks.DLMAtlasMetadataReplicator</mainClass>
+        			</manifest>
+      			</archive>
+    		</configuration>
+    		<executions>
+            	<execution>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>single</goal>
+                  </goals>
+				</execution>
+			</executions>
+  		</plugin>
+  	</plugins>
+  </build>		
 </project>
