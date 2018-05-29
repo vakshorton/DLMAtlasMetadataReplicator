@@ -1,0 +1,66 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.hortonworks</groupId>
+  <artifactId>DLMAtlasMetadataReplicator</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  
+  <dependencies>
+   	<dependency>
+    <groupId>org.apache.atlas</groupId>
+    <artifactId>atlas-client</artifactId>
+    <version>0.8.1</version>
+    <!--<version>0.7.1-incubating</version> -->
+  	</dependency>
+  	
+	<dependency>
+    <groupId>org.apache.atlas</groupId>
+    <artifactId>atlas-typesystem</artifactId>
+    <version>0.8.1</version>
+    <!-- <version>0.7.1-incubating</version> -->
+	</dependency>
+	
+	<dependency>
+    		<groupId>org.apache.hive</groupId>
+    		<artifactId>hive-jdbc</artifactId>
+    		<version>1.2.1</version>
+	</dependency>
+  </dependencies>
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <sourceDirectory>src/</sourceDirectory>
+    <resources>
+	  <resource>
+        <directory>src/main/webapp</directory>
+        <targetPath>META-INF/resources</targetPath>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <targetPath>META-INF/resources</targetPath>
+      </resource>
+    </resources>
+    <outputDirectory>classes/</outputDirectory>
+    <plugins>
+		<plugin>
+    		<artifactId>maven-assembly-plugin</artifactId>
+    		<configuration>
+				<descriptorRefs>  
+        			<descriptorRef>jar-with-dependencies</descriptorRef>
+      			</descriptorRefs>
+      			<archive>
+        			<manifest>
+          				<mainClass>org.hortonworks.DLMAtlasMetadataReplicator</mainClass>
+        			</manifest>
+      			</archive>
+    		</configuration>
+    		<executions>
+            	<execution>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>single</goal>
+                  </goals>
+				</execution>
+			</executions>
+  		</plugin>
+  	</plugins>
+  </build>		
+</project>
