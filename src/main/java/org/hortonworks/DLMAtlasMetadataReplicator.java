@@ -29,7 +29,6 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.atlas.AtlasClient;
 import org.apache.atlas.AtlasClientV2;
-import org.apache.atlas.AtlasException;
 import org.apache.atlas.AtlasServiceException;
 import org.apache.atlas.model.lineage.AtlasLineageInfo;
 import org.apache.atlas.model.lineage.AtlasLineageInfo.LineageDirection;

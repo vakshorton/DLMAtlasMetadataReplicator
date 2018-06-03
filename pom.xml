@@ -18,6 +18,13 @@
     <version>0.8.1</version>
     <!-- <version>0.7.1-incubating</version> -->
 	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.codehaus.jackson/jackson-xc -->
+<dependency>
+    <groupId>org.codehaus.jackson</groupId>
+    <artifactId>jackson-xc</artifactId>
+    <version>1.9.13</version>
+</dependency>
+	
 <!-- 	
 	<dependency>
     		<groupId>org.apache.hive</groupId>
