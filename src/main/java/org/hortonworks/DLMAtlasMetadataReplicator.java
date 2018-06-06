@@ -15,10 +15,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -30,9 +32,17 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.atlas.AtlasClient;
 import org.apache.atlas.AtlasClientV2;
 import org.apache.atlas.AtlasServiceException;
+import org.apache.atlas.model.SearchFilter;
+import org.apache.atlas.model.instance.AtlasClassification;
+import org.apache.atlas.model.instance.AtlasClassification.AtlasClassifications;
+import org.apache.atlas.model.instance.AtlasEntity;
+import org.apache.atlas.model.instance.AtlasEntity.AtlasEntityWithExtInfo;
 import org.apache.atlas.model.lineage.AtlasLineageInfo;
 import org.apache.atlas.model.lineage.AtlasLineageInfo.LineageDirection;
 import org.apache.atlas.model.lineage.AtlasLineageInfo.LineageRelation;
+import org.apache.atlas.model.typedef.AtlasClassificationDef;
+import org.apache.atlas.model.typedef.AtlasClassificationDef.AtlasClassificationDefs;
+import org.apache.atlas.model.typedef.AtlasTypesDef;
 import org.apache.atlas.typesystem.Referenceable;
 import org.apache.atlas.typesystem.json.InstanceSerialization;
 import org.apache.atlas.typesystem.persistence.Id;
@@ -80,7 +90,7 @@ public class DLMAtlasMetadataReplicator {
 	static final Logger LOG = Logger.getLogger(DLMAtlasMetadataReplicator.class);
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException, AtlasServiceException {
-Map<String, String> env = System.getenv();
+		Map<String, String> env = System.getenv();
 		
 		if(env.get("DPS_ADMIN_USER_NAME") != null){
 			dpsAdminUserName=(String)env.get("DPS_ADMIN_USER_NAME");
@@ -153,7 +163,7 @@ Map<String, String> env = System.getenv();
 		
 		initializeTrustManager();
 		
-		//while(true) {
+		while(true) {
 		String token = getToken(dps_url+dps_auth_uri).get(0);
 		try {
 			//Map<String, JSONObject> dpsClusters = getDpsClusters(token);
@@ -189,7 +199,7 @@ Map<String, String> env = System.getenv();
 				replicateAtlasMetaData(sourceAtlasHost,sourceDataset,sourceCluster,targetCluster,targetAtlasHost,targetHiveServer,targetDataset,policyName,dlmPolicyTables);
 				//moveHiveTablesToCloudStorage(targetHiveServerUrl, targetDataset, dlmPolicyTables);
 				
-				Thread.sleep(3000);
+				Thread.sleep(5000);
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -197,8 +207,7 @@ Map<String, String> env = System.getenv();
 			e.printStackTrace();
 		}
 	
-		//}
-		
+		}
 	}
 	
 	private static void printDSSEntityCollectionString(String token) throws JSONException {
@@ -247,6 +256,7 @@ Map<String, String> env = System.getenv();
 		AtlasClient sourceAtlasClient = getAtlasClient(sourceAtlasHost, atlasPort);
 		AtlasClientV2 sourceAtlasClientV2 = getAtlasClientV2(sourceAtlasHost, atlasPort);
 		AtlasClient targetAtlasClient = getAtlasClient(targetAtlasHost, atlasPort);
+		AtlasClientV2 targetAtlasClientV2 = getAtlasClientV2(targetAtlasHost, atlasPort);
 		
 		Referenceable database = searchEntity(sourceAtlasClient, "hive_db",  sourceDataset + "@" + sourceCluster);
 		database = resetEntityId("hive_db", database);
@@ -258,6 +268,7 @@ Map<String, String> env = System.getenv();
 		createEntitiesList.add(database);
 		createEntitiesList.add(destinationDatabase);
 		
+		List<String> tagList = new ArrayList<String>();
 		Iterator<String> dlmPolicyTablesIterator = dlmPolicyTables.iterator();
 		while(dlmPolicyTablesIterator.hasNext()) {
 			String currTable = dlmPolicyTablesIterator.next();				
@@ -266,9 +277,17 @@ Map<String, String> env = System.getenv();
 			table = prepareCopyHiveTable(table, database.getId());
 			//LOG.debug(getAtlasClient2(targetAtlasHost, atlasPort).getLineageInfo(orgTableId, "", 10));
 			
+			Map<String, AtlasEntity> entities = sourceAtlasClientV2.getEntityByGuid(orgTableId).getReferredEntities();
+			for (AtlasEntity entity: entities.values()) {
+				Iterator<AtlasClassification> classIter = entity.getClassifications().iterator();
+				while(classIter.hasNext()) {
+					AtlasClassification currClass = classIter.next();
+					tagList.add(currClass.getTypeName());
+				}
+			}
+			
 			Referenceable destinationTable = searchEntity(sourceAtlasClient, "hive_table", sourceDataset + "." + currTable + "@" + sourceCluster);
 			destinationTable = createDestinationHiveTableEntity(destinationDatabase, destinationTable, targetCluster);
-			
 			Referenceable dlmHiveProcess = createDlmHiveProcess(table, destinationTable, policyName, targetCluster);
 			
 			createEntitiesList.add(table);				
@@ -277,6 +296,31 @@ Map<String, String> env = System.getenv();
 			createEntitiesList.add(destinationTable);
 			createEntitiesList.add(dlmHiveProcess);
 		}
+		
+		SearchFilter searchFilter = new SearchFilter();
+		searchFilter.setParam("type", "classification");
+		//searchFilter.setParam("name", tagList);
+		
+		AtlasTypesDef sourceTypesDef = sourceAtlasClientV2.getAllTypeDefs(searchFilter);
+		AtlasTypesDef targetTypesDef = targetAtlasClientV2.getAllTypeDefs(searchFilter);
+		
+		Set<String> sourceSuperTags = new HashSet<String>();
+		List<AtlasClassificationDef> sourceClassDefList = sourceTypesDef.getClassificationDefs();
+		Iterator<AtlasClassificationDef> sourceClassDefIter = sourceClassDefList.iterator();
+		
+		while (sourceClassDefIter.hasNext()) {
+			AtlasClassificationDef sourceClass = sourceClassDefIter.next();
+			String sourceClassName = sourceClass.getName();
+			if(targetTypesDef.hasClassificationDef(sourceClassName)) {
+				sourceClassDefIter.remove();
+			}else {
+				sourceSuperTags.addAll(sourceClass.getSuperTypes());
+			}
+		}
+		
+		AtlasTypesDef newTypesDef = new AtlasTypesDef();
+		newTypesDef.setClassificationDefs(sourceClassDefList);
+		targetAtlasClientV2.createAtlasTypeDefs(newTypesDef);
 		
 		/*
 		for(int i=0; i < createEntitiesList.size(); i++) {
