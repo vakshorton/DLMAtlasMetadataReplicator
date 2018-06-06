@@ -8,4 +8,4 @@ export DPS_ADMIN_USER_NAME=admin
 export DPS_ADMIN_PASSWORD=admin
 export DPS_HOST=$(hostname -f)
 
-nohup java -jar target/DLMAtlasMetadataReplicator.jar > replicator.log &
+nohup java -jar target/DLMAtlasMetadataReplicator.jar > /dev/null 2>&1
