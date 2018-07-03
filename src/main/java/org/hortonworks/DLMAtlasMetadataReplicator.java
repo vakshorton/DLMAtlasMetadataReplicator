@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -160,7 +161,6 @@ public class DLMAtlasMetadataReplicator {
 		
 		BasicConfigurator.configure();
 		LOG.setLevel(Level.DEBUG);
-		
 		initializeTrustManager();
 		
 		while(true) {
@@ -736,19 +736,48 @@ public class DLMAtlasMetadataReplicator {
 	    JSONObject response = null;
 	    String userpass = ambariAdminUser + ":" + ambariAdminPassword;
 	    String basicAuth = "Basic " + new String(new Base64().encode(userpass.getBytes()));
+	    InputStream content = null;
+	    BufferedReader rd = null;
+	    String jsonText = null;
+	    
+		URL url;
 		try {
-			URL url = new URL (urlString);
+			url = new URL (urlString);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			System.out.println(connection.getRequestProperties());
 			connection.setRequestMethod("GET");
 			connection.setDoOutput(true);            
 			connection.setRequestProperty ("Authorization", basicAuth);
-			InputStream content = (InputStream)connection.getInputStream();
-			BufferedReader rd = new BufferedReader(new InputStreamReader(content, Charset.forName("UTF-8")));
-	      	String jsonText = readAll(rd);
-	      	response = new JSONObject(jsonText);
-		} catch(Exception e) {
+			if (connection.getResponseCode() == 403) {
+				LOG.info("********** Unauthorized, need SSO token");
+				LOG.info(connection.getHeaderFields());
+				content = (InputStream)connection.getErrorStream();
+				rd = new BufferedReader(new InputStreamReader(content, Charset.forName("UTF-8")));
+				jsonText = readAll(rd);
+				response = new JSONObject(jsonText);
+				
+				LOG.info(response);
+				LOG.info(response.getString("jwtProviderUrl")+url);
+				httpGetObjectAmbari(response.getString("jwtProviderUrl")+url);
+				System.exit(0);
+			}if (connection.getResponseCode() == 307) {
+				LOG.info("********** Redirect");
+				LOG.info("********** " +connection.getHeaderField("Set-Cookie"));
+			}else {
+				LOG.info("********** Authorized");
+				content = (InputStream)connection.getInputStream();
+				rd = new BufferedReader(new InputStreamReader(content, Charset.forName("UTF-8")));
+				jsonText = readAll(rd);
+				response = new JSONObject(jsonText);
+			}
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+		
 		return response;
 	}
 	
