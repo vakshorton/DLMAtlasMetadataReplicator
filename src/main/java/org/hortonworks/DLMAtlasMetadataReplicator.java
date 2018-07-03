@@ -190,13 +190,14 @@ public class DLMAtlasMetadataReplicator {
 				List<String> dlmPolicyTables = getDlmPolicyTables(sourceClusterId, sourceDataset, token);
 				String sourceAtlasHost = httpGetObjectAmbari(sourceAmbariUrl+ambari_atlas_component_uri).getJSONArray("host_components").getJSONObject(0).getJSONObject("HostRoles").getString("host_name");
 				String targetAtlasHost = httpGetObjectAmbari(targetAmbariUrl+ambari_atlas_component_uri).getJSONArray("host_components").getJSONObject(0).getJSONObject("HostRoles").getString("host_name");
-				String targetHiveServer = httpGetObjectAmbari(targetAmbariUrl+ambari_hive_component_uri).getJSONArray("host_components").getJSONObject(0).getJSONObject("HostRoles").getString("host_name");
+				//String targetHiveServer = httpGetObjectAmbari(targetAmbariUrl+ambari_hive_component_uri).getJSONArray("host_components").getJSONObject(0).getJSONObject("HostRoles").getString("host_name");
 				
-				String targetHiveServerUrl = "jdbc:hive2://" + targetHiveServer + ":" + hiveServerPort + "/" + targetDataset;
-				LOG.debug("********** Target Hive Url: " + targetHiveServerUrl);
+				//String targetHiveServerUrl = "jdbc:hive2://" + targetHiveServer + ":" + hiveServerPort + "/" + targetDataset;
+				//LOG.debug("********** Target Hive Url: " + targetHiveServerUrl);
 				LOG.debug("********** Source Atlas Url: http://" + sourceAtlasHost + ":" + atlasPort);
 				
-				replicateAtlasMetaData(sourceAtlasHost,sourceDataset,sourceCluster,targetCluster,targetAtlasHost,targetHiveServer,targetDataset,policyName,dlmPolicyTables);
+				//replicateAtlasMetaData(sourceAtlasHost,sourceDataset,sourceCluster,targetCluster,targetAtlasHost,targetHiveServer,targetDataset,policyName,dlmPolicyTables);
+				replicateAtlasMetaData(sourceAtlasHost,sourceDataset,sourceCluster,targetCluster,targetAtlasHost,targetDataset,policyName,dlmPolicyTables);
 				//moveHiveTablesToCloudStorage(targetHiveServerUrl, targetDataset, dlmPolicyTables);
 				
 				Thread.sleep(5000);
@@ -244,7 +245,7 @@ public class DLMAtlasMetadataReplicator {
 			String sourceCluster,
 			String targetCluster,
 			String targetAtlasHost, 
-			String targetHiveServer,
+			//String targetHiveServer,
 			String targetDataset,
 			String policyName,
 			List<String> dlmPolicyTables
