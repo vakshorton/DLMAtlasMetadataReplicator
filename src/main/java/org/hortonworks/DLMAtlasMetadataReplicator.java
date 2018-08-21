@@ -283,6 +283,7 @@ public class DLMAtlasMetadataReplicator {
 				Iterator<AtlasClassification> classIter = entity.getClassifications().iterator();
 				while(classIter.hasNext()) {
 					AtlasClassification currClass = classIter.next();
+					LOG.info(currClass.getTypeName());
 					tagList.add(currClass.getTypeName());
 				}
 			}
