@@ -285,6 +285,9 @@ public class DLMAtlasMetadataReplicator {
 					AtlasClassification currClass = classIter.next();
 					if(currClass != null)
 						tagList.add(currClass.getTypeName());
+					else {
+						tagList.add("SENSITIVE");
+					}
 				}
 			}
 			
